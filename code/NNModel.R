@@ -1,6 +1,12 @@
 
 library(caret)
 
+#main caller function
+run <- function()
+{
+    runNN()
+}
+
 trainNN <- function(trainDataFile, modelOutFile, trainingType="none", predictors=NULL)
 {
     model.data <- read.csv(trainDataFile, sep=",", header=TRUE) #todo: Error handling
