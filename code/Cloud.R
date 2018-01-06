@@ -1,4 +1,14 @@
-run <- function()
+runWrapper <- function()
+{
+    models <- c("gaussian", "poisson", "nnet")    
+    
+    for(model in models)
+    {
+        run(model)
+    }
+}
+
+run <- function(model="gaussian")
 {
     require(data.table)
  
@@ -13,9 +23,9 @@ run <- function()
         {
             next 
         }
-        model.fit <- fitModel(model.trainData, "gaussian")
+        model.fit <- fitModel(model.trainData, model)
         
-        forecastModel(model.fit, testDataDF[i, ], "gaussian")
+        forecastModel(model.fit, testDataDF[i, ], model)
     }
     
 }
