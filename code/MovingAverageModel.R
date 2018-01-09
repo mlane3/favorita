@@ -1,3 +1,29 @@
+runAvgP <- function()
+{
+    require(foreach)
+    require(doParallel)
+    
+    noCores <- detectCores()
+    cl <- makeCluster(noCores)
+    registerDoParallel(cl)
+    
+    testDataDF <- readRDS("data/testData.rds")
+    
+    out.data <- foreach(x = 1:nrow(testDataDF), .combine = rbind, .export=c("computeAvgP")) %dopar%
+            {
+                 computeAvgP(testDataDF$id[x], as.character(testDataDF$date[x]), testDataDF$item_nbr[x], testDataDF$store_nbr[x])
+            }
+    
+    stopCluster(cl)
+    
+    #remove rows with -9999
+    out.data <- out.data[out.data$unit_sales >= 0, ]
+    
+    #write to output
+    outfile <- paste0("data/out/average/avg.csv")
+    write.table(out.data, file=outfile, append=FALSE, sep=",", col.names=TRUE, row.names=FALSE, quote=FALSE)
+}
+
 runAvg <- function()
 {
     testDataDF <- readRDS("data/testData.rds")
@@ -30,8 +56,50 @@ runAvg <- function()
     write.table(out.data, file=outfile, append=FALSE, sep=",", col.names=TRUE, row.names=FALSE, quote=FALSE)
 }
 
+computeAvgP <- function(rowID, date, itemNbr, storeNbr)
+{
+    date <- as.Date(date)
+    
+    fileNo <- itemNbr
+    filename <- paste0("data/itemNbr/", itemNbr, ".csv")
+    
+    if(file.exists(filename) == TRUE)
+    {
+        model.train <- read.csv(filename[1], sep=",", header=TRUE) 
+        model.train$date <- as.Date(model.train$date)
+        model.train <- model.train[model.train$store_nbr == storeNbr, ]
+        
+        if(nrow(model.train) == 0)
+        {
+            return(data.frame(id=rowID, unit_sales=-9999))
+        }
+        
+        month <- as.numeric(format(date, "%m"))
+        day <- as.numeric(format(date, "%d"))
+        
+        model.train <- model.train[as.numeric(format(model.train$date, "%m")) == month &
+                                       as.numeric(format(model.train$date, "%d")) == day, ]
+        
+        if(nrow(model.train) == 0)
+        {
+            return(data.frame(id=rowID, unit_sales=-9999))
+        }
+        
+        model.train$unit_sales[model.train$unit_sales < 0] <- 0
+        
+        return(data.frame(id=rowID, unit_sales=mean(model.train$unit_sales)))
+    }
+    else #for new_items
+    {
+        return(data.frame(id=rowID, unit_sales=-9999))
+    }
+    
+}
+
 computeAvg <- function(date, itemNbr, storeNbr)
 {
+    date <- as.Date(date)
+    
     fileNo <- itemNbr
     filename <- paste0("data/itemNbr/", itemNbr, ".csv")
     
