@@ -3,7 +3,7 @@
 instanceRun <- function(num=1, method="runAvgP")
 {
     testFile <- paste0("data/", "testData", num, ".rds")
-    outFile <- paste0("data/out/average/testData", num, "csv")
+    outFile <- paste0("data/out/average/testData", num, ".csv")
     runAvgP(readRDS(testFile), readRDS("data/newItempredictions.rds"), outFile)
 }
 
