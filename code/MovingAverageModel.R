@@ -1,3 +1,4 @@
+#Author: Rashaad Jones
 instanceRun <- function(num=1, method="runAvgP")
 {
     testFile <- paste0("data/", "testData", num, ".rds")
