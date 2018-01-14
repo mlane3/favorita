@@ -1,3 +1,4 @@
+#Author: Rashaad Jones
 runWrapper <- function()
 {
     models <- c("gaussian", "poisson", "nnet")    
