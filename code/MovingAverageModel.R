@@ -4,7 +4,7 @@ instanceRun <- function(num=1, method="runAvgP")
 {
     testFile <- paste0("data/", "testData", num, ".rds")
     outFile <- paste0("data/out/average/testData", num, "csv")
-    runAvgP(readRDS(testFile), outFile)
+    runAvgP(readRDS(testFile), readRDS("data/newItempredictions.rds"), outFile)
 }
 
 combineOutput <- function(outpath="data/out/average", submitFile="data/out/average/avg.csv")
@@ -70,7 +70,7 @@ splitTestData <- function(numSplits=4)
     }
 }
 
-runAvgP <- function(testDataDF = NULL, outfile=NULL)
+runAvgP <- function(testDataDF = NULL, newItemDF = NULL, outfile=NULL)
 {
     require(foreach)
     require(doParallel)
@@ -86,7 +86,7 @@ runAvgP <- function(testDataDF = NULL, outfile=NULL)
     
     out.data <- foreach(x = 1:nrow[testDataDF], .combine = rbind, .export=c("computeAvgP"), .verbose = TRUE) %dopar%
             {
-                 computeAvgP(testDataDF$id[x], as.character(testDataDF$date[x]), testDataDF$item_nbr[x], testDataDF$store_nbr[x])
+                 computeAvgP(testDataDF$id[x], as.character(testDataDF$date[x]), testDataDF$item_nbr[x], testDataDF$store_nbr[x], newItemsDF)
             }
     
     stopCluster(cl)
@@ -135,7 +135,7 @@ runAvg <- function()
     write.table(out.data, file=outfile, append=FALSE, sep=",", col.names=TRUE, row.names=FALSE, quote=FALSE)
 }
 
-computeAvgP <- function(rowID, date, itemNbr, storeNbr)
+computeAvgP <- function(rowID, date, itemNbr, storeNbr, newItemsDF)
 {
     date <- as.Date(date)
     
@@ -170,7 +170,11 @@ computeAvgP <- function(rowID, date, itemNbr, storeNbr)
     }
     else #for new_items
     {
-        newItemsDF <- read.csv("data/newpItempredictions.csv", header = TRUE, sep=",")
+        #newItemsDF <- read.csv("data/newpItempredictions.csv", header = TRUE, sep=",")
+        if(is.null(newItemsDF))
+        {
+            newItemsDF <- readRDS("data/newpItempredictions.rds")
+        }
         
         unitSales <- newItemsDF[newItemsDF$id == rowID, "avg"]
         return(data.frame(id=rowID, unit_sales=unitSales))
