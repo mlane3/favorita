@@ -1,3 +1,4 @@
+#Author: Rashaad Jones
 #NOTE: Code is for demonstration purposes only.  Code is not yet reproducible and is not stable
 #       A cleaner version will be available in the near future.
 
