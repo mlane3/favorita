@@ -1,4 +1,5 @@
 #Author: Rashaad Jones
+
 instanceRun <- function(num=1, method="runAvgP")
 {
     testFile <- paste0("data/", "testData", num, ".rds")
@@ -169,7 +170,10 @@ computeAvgP <- function(rowID, date, itemNbr, storeNbr)
     }
     else #for new_items
     {
-        return(data.frame(id=rowID, unit_sales=-9999))
+        newItemsDF <- read.csv("data/newpItempredictions.csv", header = TRUE, sep=",")
+        
+        unitSales <- newItemsDF[newItemsDF$id == rowID, "avg"]
+        return(data.frame(id=rowID, unit_sales=unitSales))
     }
     
 }
