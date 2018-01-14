@@ -6,7 +6,7 @@ instanceRunG <- function(num=1)
     mainFavorita(readRDS(testFile), readRDS("data/newItempredictions.rds"), outFile)
 }
 
-combineOutput <- function(outpath="data/out/gaussian", submitFile="data/out/gaussian/avg.csv")
+combineOutputG <- function(outpath="data/out/gaussian", submitFile="data/out/gaussian/avg.csv")
 {
     files <- list.files(outpath, pattern="^testData\\d.*", full.names = TRUE)      
     
