@@ -1,4 +1,16 @@
 #Author: Rashaad Jones
+instanceRunNN <- function(num=1)
+{
+    testFile <- paste0("data/", "testData", num, ".rds")
+    outFile <- paste0("data/out/nnet/testData", num, ".csv")
+    mainFavorita(readRDS(testFile), readRDS("data/newItempredictions.rds"), outFile, model="nnet")
+}
+
+combineOutputNN <- function()
+{
+    combineOutputG(outpath = "data/out/nnet", submitFile="data/out/nnet/avg.csv")
+}
+
 instanceRunG <- function(num=1)
 {
     testFile <- paste0("data/", "testData", num, ".rds")
@@ -33,7 +45,7 @@ mainFavoritaWrapper <- function()
     mainFavorita(testDataDF, newItemsDF)
 }
 
-mainFavorita <- function(testDataDF = NULL, newItemsDF = NULL, outfile=NULL)
+mainFavorita <- function(testDataDF = NULL, newItemsDF = NULL, outfile=NULL, model="gaussian")
 {
     require(data.table)
     require(foreach)
@@ -49,7 +61,7 @@ mainFavorita <- function(testDataDF = NULL, newItemsDF = NULL, outfile=NULL)
     exportFun <- c("getTrainingData", "prepareTrainingData", "getSeasonalIndex", "fitModel", "forecastP")
     
     out.data <- foreach(i=1:nrow(testDataDF), .packages=c("caret"), .verbose=TRUE,
-    #out.data <- foreach(i=1:100, .packages=c("caret"), .verbose=TRUE,
+    #out.data <- foreach(i=1:10, .packages=c("caret"), .verbose=TRUE,
                              .combine=rbind,
                              .export=exportFun) %dopar%
     {
@@ -67,9 +79,9 @@ mainFavorita <- function(testDataDF = NULL, newItemsDF = NULL, outfile=NULL)
         }
         else
         {
-            model.fit <- fitModel(model.trainData, "gaussian")
+            model.fit <- fitModel(model.trainData, model)
         
-            forecastP(model.fit, testDataDF[i, ], "gaussian")
+            forecastP(model.fit, testDataDF[i, ], model)
         }
         
     }
@@ -145,11 +157,13 @@ prepareTrainingData <- function(dataDF)
 fitModel <- function(df, modelType)
 {
     #df$seasonal_ID <- as.factor(df$seasonal_ID)
-    df$end_of_month <- as.logical(df$end_of_month)
-    df$payday <- as.logical(df$payday)
     
     #make all -1 unit_sales (returns) equal to 0
     df$unit_sales[df$unit_sales<0] <- 0
+    
+   df$end_of_month <- as.logical(df$end_of_month)
+   df$payday <- as.logical(df$payday)
+   df$date <- as.Date(df$date)
     
     # code belows improves rsme for gaussian model, but will not be included at this time
     #if(modelType == 'gaussian')
@@ -159,7 +173,12 @@ fitModel <- function(df, modelType)
     
     if(modelType == 'nnet')
     {
-        model.fit <- train(unit_sales ~ date+end_of_month+payday, data=df, method='nnet', trace=FALSE, linout=1)
+        #df$date <- c(scale(df$date))
+        df$end_of_month <- c(scale(df$end_of_month))
+        df$payday <- c(scale(df$payday))
+        df$date <- as.numeric(df$date)
+        #model.fit <- train(unit_sales ~ date+end_of_month+payday, data=df, method='nnet', trace=FALSE, linout=1)
+        model.fit <- train(unit_sales ~ date, data=df, method='nnet', trace=FALSE, linout=1)
     }
     else
     {
@@ -178,7 +197,9 @@ fitModel <- function(df, modelType)
 
 forecastModel <- function(model.fit, testData, modelType)
 {
-    model.test <- testData[1, c(2, 3, 7, 8)]    #reorder to meet structure of training data
+    model.test <- testData[1, c(2, 7, 8)]    #reorder to meet structure of training data
+        
+
     
     model.prediction <- predict(model.fit, newdata=model.test)
     
@@ -291,6 +312,19 @@ run <- function()
 forecastP <- function(model.fit, testData, modelType)
 {
     model.test <- testData[1, c(2, 3, 6, 7, 8)]    #reorder to meet structure of training data
+    
+    model.test$end_of_month <- as.logical(model.test$end_of_month)
+    model.test$payday <- as.logical(model.test$payday)
+    #model.test$date <- as.Date(model.test$date)
+    
+    #model.test$date <- c(scale(model.test$date))
+    #model.test$end_of_month <- c(scale(model.test$end_of_month))
+    #model.test$payday <- c(scale(model.test$payday))
+    
+    if(modelType == "nnet")
+    {
+        model.test$date <- as.numeric(model.test$date)
+    }
     
     model.prediction <- predict(model.fit, newdata=model.test)
     
