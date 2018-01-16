@@ -1,0 +1,6 @@
+GAR_AUTH_FILE="Favorita-auth.json"
+GCS_AUTH_FILE="Favorita-auth.json"
+GCE_AUTH_FILE="Favorita-auth.json"
+GCE_DEFAULT_PROJECT_ID="favorita-190722"
+GCE_DEFAULT_ZONE="us-east1-b"
+GCS_SESSION_BUCKET="favoritadata"
