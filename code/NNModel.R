@@ -1,4 +1,3 @@
-#Author: Rashaad Jones
 
 library(caret)
 

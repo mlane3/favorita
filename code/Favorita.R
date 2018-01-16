@@ -1,4 +1,5 @@
 #Author: Rashaad Jones
+#Editor: Michael Lane
 instanceRunNN <- function(num=1)
 {
     testFile <- paste0("data/", "testData", num, ".rds")
